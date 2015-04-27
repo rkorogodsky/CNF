@@ -23,22 +23,58 @@ datatype sentence =  P | Q | R | S | T             (* allowable sent. vars    *)
 
 
 (* REMOVE ARROWS -- removeArows *) 
-fun removeArows(~f)      = ~(removeArows f)  
+fun removeArows(~f)      = ~(removeArows (f))  
   | removeArows(f & g)   = removeArows(f) & removeArows(g)
-  .....
+  | removeArows(f v g)   = removeArows(f) v removeArows(g)
+  | removeArows(f --> g) = ((~(f)) v (g))
+  | removeArows(f <-> g) = removeArows(f) v removeArows(f) & removeArows(g) v removeArows(f) & removeArows(f) v removeArows(g) & removeArows(g) v removeArows(g)
+  | removeArows(f) = (f);
 
 (* BRING IN NEGATION, REMOVING DOUBLE NEGATIONS AS WE GO  *) 
-fun bringInNegation(~(~ f))   = bringInNegation(f)
-  | bringInNegation(f & g)    = bringInNegation(f) & bringInNegation(g)
-  ......
+fun bringInNegation(~(~ f))     = bringInNegation(f)
+  | bringInNegation(~(f & g))   = bringInNegation(f) & bringInNegation(g)
+  | bringInNegation(~(f v g))   = bringInNegation(f) v bringInNegation(g)
+  | bringInNegation(~(f --> g)) = bringInNegation(f) --> bringInNegation(g)
+  | bringInNegation(~(f <-> g)) = bringInNegation(f) <-> bringInNegation(g)
+  | bringInNegation(f) = (f);
 
 (* DISTRIBUTE THE DISJUNCTION IN THE CONJUNCTIONS *) 
-fun distributeDisjInConj(f v (g & h)) = ...
-  ......
+fun distributeDisjInConj(f v (g & h)) = distributeDisjInConj f v distributeDisjInConj g & distributeDisjInConj h 
+(**)
   | distributeDisjInConj(f v g)   = distributeDisjInConj f v distributeDisjInConj g
-  ......
+  | distributeDisjInConj(f) = (f);
+  (**)
+  
+fun show P = (print "P")
+| show Q = (print "Q")
+| show R = (print "R")
+| show S = (print "S")
+| show T = (print "T")
+| show (~f) = (print "-";
+			 show f)
+| show (f v g) = (show f;
+				  print "v";
+				  show g)
+				  
+| show (f & g) = (show f;
+  				  print "&";
+  				  show g)
+				  
+| show (f <-> g) = (show f;
+  				  print "<->";
+  				  show g)	 				 
 
+| show(f --> g) = (show (f);
+  					 print "->";
+					 show (g))
+		
+  					
 
+fun cnf (~(f)) = bringInNegation(~(f))
+| cnf (f --> g) = removeArows(f --> g)
+| cnf (f <-> g) = removeArows(f <-> g)
+| cnf (f v g)   = distributeDisjInConj(f v g)
+| cnf(f) = (f);
 
 (* TOP LEVEL FUNCTIONS *)
 fun run s  =  (print "\nSentence is: "; 
